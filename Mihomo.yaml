@@ -73,8 +73,8 @@ rule-provider-domain: &rule-provider-domain {type: http, behavior: domain, inter
 rule-providers-ipcidr: &rule-providers-ipcidr {type: http, behavior: ipcidr, interval: 86400}
 
 proxy-providers:
-  provider1:
-    <<: *provider-base
+  # provider1:
+    # <<: *provider-base
     # url: 
 
 proxies: null
