@@ -1,0 +1,143 @@
+#============================================
+# 配置来自墨鱼[https://github.com/ddgksf2013]
+#============================================
+
+# 端口配置
+port: 7890           # HTTP 代理端口
+socks-port: 7891     # Socks 端口
+redir-port: 7892     # Redir 端口
+mixed-port: 7893     # 混合端口
+
+# 全局配置
+allow-lan: true
+bind-address: "*"
+ipv6: true
+
+# 外部控制
+external-controller: 127.0.0.1:9090
+secret: mihomo-secret
+external-controller-cors:
+  allow-origins:
+  - https://yacd.metacubex.one
+  - https://metacubex.github.io
+  - https://board.zash.run.place
+  - tauri://localhost
+  - http://tauri.localhost
+  - http://localhost:3000
+  allow-private-network: true
+
+# 统一延迟
+unified-delay: true
+
+dns:
+  enable: true
+  listen: 0.0.0.0:53
+  ipv6: true
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-range6: fd00:bada:55ed::1/64
+  fake-ip-filter:
+    - "*.lan"
+    - localhost.ptlogin2.qq.com
+    - +.srv.nintendo.net
+    - +.stun.playstation.net
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - +.xboxlive.com
+    - msftconnecttest.com
+    - xbox.*.microsoft.com
+    - "*.battlenet.com.cn"
+    - "*.battlenet.com"
+    - "*.blzstatic.cn"
+    - "*.battle.net"
+  nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  fallback:
+    - https://cloudflare-dns.com/dns-query
+    - https://dns.google/dns-query
+    - https://dns.alidns.com/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: CN
+    ipcidr:
+      - 240.0.0.0/4
+
+
+provider-base: &provider-base {type: http, interval: 86400, health-check: {enable: true, url: http://www.gstatic.com/generate_204, interval: 1800, lazy: true}}
+all-select: &all-select {type: select, include-all: true}
+group-select: &group-select {type: select, proxies: [♻️ 自动选择, 🚀 手动切换, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇨🇳 台湾节点, 🇸🇬 狮城节点, DIRECT]}
+all-auto: &all-auto {type: url-test, lazy: true, url: http://www.gstatic.com/generate_204, interval: 900, include-all: true}
+rule-provider-classical: &rule-provider-classical {type: http, behavior: classical, interval: 86400}
+rule-provider-domain: &rule-provider-domain {type: http, behavior: domain, interval: 86400}
+rule-providers-ipcidr: &rule-providers-ipcidr {type: http, behavior: ipcidr, interval: 86400}
+
+proxy-providers:
+  provider1:
+    <<: *provider-base
+    # url: 
+
+proxies: null
+
+proxy-groups:
+  #分流分组
+  - {name: 🚀 手动切换, <<: *all-select}
+  - {name: 🌏 全球加速, <<: *group-select}
+  - {name: 🍎 苹果服务, <<: *group-select}
+  - {name: 📺 哔哩哔哩, type: select, proxies: [DIRECT, 🇭🇰 香港节点, 🇨🇳 台湾节点]}
+  - {name: 🤖 OpenAi, type: select, proxies: [🇺🇲 美国节点]}
+  - {name: 🎬 国际媒体, <<: *group-select}
+  - {name: 🌌 谷歌服务, <<: *group-select}
+  - {name: 📟 电报消息, <<: *group-select}
+  - {name: 🐦 推特服务, <<: *group-select}
+  - {name: 🎮 游戏平台, <<: *group-select}
+  - {name: 🆎 AdBlock, type: select, proxies: [REJECT]}
+  - {name: 🐟 兜底分流, <<: *group-select}
+  #节点分组
+  - {name: ♻️ 自动选择, <<: *all-auto}
+  - {name: 🇭🇰 香港节点, <<: *all-auto, filter: "港|HK|(?i)Hong"}
+  - {name: 🇯🇵 日本节点, <<: *all-auto, filter: "日|JP|(?i)Japan"}
+  - {name: 🇨🇳 台湾节点, <<: *all-auto, filter: "台|湾|TW|(?i)Taiwan"}
+  - {name: 🇺🇲 美国节点, <<: *all-auto, filter: "美|US|(?i)States|American"}
+  - {name: 🇸🇬 狮城节点, <<: *all-auto, filter: "新|坡|SG|(?i)Singapore"}
+
+rule-providers:
+  Ad: {<<: *rule-provider-domain, url: https://raw.githubusercontent.com/Cats-Team/AdRules/main/adrules_domainset.txt, path: ./ruleset/anti-ad-clash.yaml}
+  OpenAi: {<<: *rule-provider-classical, url: https://gist.githubusercontent.com/ddgksf2013/cb4121e8b5c5d865cc949cb8120320c4/raw/Ai.yaml, path: ./ruleset/OpenAi.yaml}
+  BiliBili: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BiliBili/BiliBili.yaml, path: ./ruleset/BiliBili.yaml}
+  Bahamut: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Bahamut/Bahamut.yaml, path: ./ruleset/Bahamut.yaml}
+  GlobalMedia: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GlobalMedia/GlobalMedia_Classical.yaml, path: ./ruleset/GlobalMedia.yaml}
+  Apple: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Apple/Apple_Classical.yaml, path: ./ruleset/Apple.yaml}
+  Github: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GitHub/GitHub.yaml, path: ./ruleset/Github.yaml}
+  Microsoft: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Microsoft/Microsoft.yaml, path: ./ruleset/Microsoft.yaml}
+  Google: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Google/Google.yaml, path: ./ruleset/Google.yaml}
+  Telegram: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Telegram/Telegram.yaml, path: ./ruleset/Telegram.yaml}
+  Twitter: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Twitter/Twitter.yaml, path: ./ruleset/Twitter.yaml}
+  Game: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Game/Game.yaml, path: ./ruleset/Game.yaml}
+  ProxyLite: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/ProxyLite/ProxyLite.yaml, path: ./ruleset/ProxyLite.yaml}
+  Direct: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Direct/Direct.yaml, path: ./ruleset/Direct.yaml}
+  Lan: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Lan/Lan.yaml, path: ./ruleset/Lan.yaml}
+  Download: {<<: *rule-provider-classical, url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Download/Download.yaml, path: ./ruleset/Download.yaml}
+  ChinaIP: {<<: *rule-providers-ipcidr, url: https://cdn.jsdelivr.net/gh/soffchen/GeoIP2-CN@release/clash-rule-provider.yml, path: ./ruleset/ChinaIP.yaml}
+
+
+rules:
+  - RULE-SET,Ad,🆎 AdBlock
+  - RULE-SET,OpenAi,🤖 OpenAi
+  - RULE-SET,BiliBili,📺 哔哩哔哩
+  - RULE-SET,Bahamut,📺 哔哩哔哩
+  - RULE-SET,GlobalMedia,🎬 国际媒体
+  - RULE-SET,Apple,🍎 苹果服务
+  - RULE-SET,Github,🌏 全球加速
+  - RULE-SET,Microsoft, 🌏 全球加速
+  - RULE-SET,Google,🌌 谷歌服务
+  - RULE-SET,Telegram,📟 电报消息
+  - RULE-SET,Twitter,🌏 全球加速
+  - RULE-SET,Game,🎮 游戏平台
+  - RULE-SET,ProxyLite,🌏 全球加速
+  - RULE-SET,Direct,DIRECT
+  - RULE-SET,Lan,DIRECT
+  - RULE-SET,Download,DIRECT
+  - RULE-SET,ChinaIP,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,🐟 兜底分流
