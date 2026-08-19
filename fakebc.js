@@ -1,27 +1,25 @@
 // 百层试炼作弊脚本
-// 用法：gift_code 以 fake 开头，格式：fake名称.数量/名称.数量
-// 示例：fake1.100/2.100 表示 name="1" number=100 和 name="2" number=100
-// 支持范围：fake145-147.5 表示 name="145"到"147" number都是5
-
 if ($response) {
-    console.log('=== 百层试炼响应修改开始 ===');
+    console.log('=== 响应修改开始 ===');
     console.log('请求URL:', $request.url);
-    console.log('原始响应状态:', $response.status);
     
     // 解析请求体
     let requestBody = {};
     try {
         requestBody = JSON.parse($request.body || '{}');
+        console.log('请求体:', JSON.stringify(requestBody));
     } catch (e) {
-        console.log('请求体解析失败，使用空对象');
+        console.log('请求体解析失败:', e);
         requestBody = {};
     }
     
     // 检查 gift_code 是否以 "fake" 开头
-    const giftCode = requestBody.gift_code || '';
-    if (!giftCode.startsWith('fake')) {
-        console.log('gift_code 不以 fake 开头，跳过修改');
-        $done({});
+    const giftCode = (requestBody.gift_code || '').toString();
+    console.log('gift_code:', giftCode);
+    
+    if (!giftCode.toLowerCase().startsWith('fake')) {
+        console.log('gift_code 不以 fake 开头，返回原始响应');
+        $done($response);
         return;
     }
     
@@ -41,28 +39,33 @@ if ($response) {
     function parseMockData(giftCode) {
         const mockData = [];
         
-        // 去掉 fake 前缀，按 / 分割
-        const groupsStr = giftCode.substring(4); // 去掉 "fake"
+        // 去掉 fake 前缀（不区分大小写）
+        const groupsStr = giftCode.substring(4);
         if (!groupsStr) {
+            console.log('gift_code 只有 fake 前缀，无数据');
             return mockData;
         }
         
-        const groups = groupsStr.split('/');
+        console.log('解析数据部分:', groupsStr);
+        
+        // 使用 .. 作为组分隔符
+        const groups = groupsStr.split('..');
+        console.log('分割后的组:', groups);
         
         for (const group of groups) {
-            if (!group) continue; // 跳过空字符串
+            if (!group || !group.trim()) continue;
             
             // 按 . 分割 name 和 number
-            const parts = group.split('.');
+            const parts = group.trim().split('.');
             if (parts.length !== 2) {
                 console.log('跳过无效格式:', group);
                 continue;
             }
             
-            const namePart = parts[0];
+            const namePart = parts[0].trim();
             const number = parseInt(parts[1]);
             
-            if (isNaN(number)) {
+            if (isNaN(number) || number <= 0) {
                 console.log('跳过无效数字:', group);
                 continue;
             }
@@ -75,17 +78,17 @@ if ($response) {
                     const end = parseInt(rangeParts[1]);
                     
                     if (!isNaN(start) && !isNaN(end) && start <= end) {
-                        // 生成范围内的所有 name
                         for (let i = start; i <= end; i++) {
                             mockData.push({ name: String(i), number: number });
                         }
+                        console.log(`添加范围 ${start}-${end}，数量 ${number}`);
                     } else {
                         console.log('跳过无效范围:', group);
                     }
                 }
             } else {
-                // 单个 name
                 mockData.push({ name: namePart, number: number });
+                console.log(`添加单项 ${namePart}，数量 ${number}`);
             }
         }
         
@@ -96,10 +99,9 @@ if ($response) {
     const mockData = parseMockData(giftCode);
     console.log('生成的 mock 数据:', JSON.stringify(mockData));
     
-    // 如果 mockData 为空，跳过修改
     if (mockData.length === 0) {
-        console.log('mock 数据为空，跳过修改');
-        $done({});
+        console.log('mock 数据为空，返回原始响应');
+        $done($response);
         return;
     }
     
@@ -118,7 +120,7 @@ if ($response) {
     };
     
     console.log('修改后的响应:', JSON.stringify(responseBody));
-    console.log('=== 百层试炼响应修改结束 ===');
+    console.log('=== 响应修改结束 ===');
     
     // 返回修改后的响应
     $done({
