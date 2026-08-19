@@ -34,7 +34,7 @@ if ($response) {
         error: 0,
         nonce_str: generateRandomHex(3).toUpperCase(),
         success: true,
-        c_sign: generateRandomHex(32),
+        c_sign: generateRandomHex(40),
         content: JSON.stringify(mockData),
         content_obj: mockData,
         sign: requestBody.sign || '',
@@ -47,7 +47,6 @@ if ($response) {
     // 返回修改后的响应
     $done({
         status: 200,
-        headers: $response.headers,
         body: JSON.stringify(responseBody)
     });
 } else {
