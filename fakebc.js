@@ -1,5 +1,10 @@
+// 百层试炼作弊脚本
+// 用法：gift_code 以 fake 开头，格式：fake名称.数量/名称.数量
+// 示例：fake1.100/2.100 表示 name="1" number=100 和 name="2" number=100
+// 支持范围：fake145-147.5 表示 name="145"到"147" number都是5
+
 if ($response) {
-    console.log('=== 响应修改开始 ===');
+    console.log('=== 百层试炼响应修改开始 ===');
     console.log('请求URL:', $request.url);
     console.log('原始响应状态:', $response.status);
     
@@ -91,6 +96,13 @@ if ($response) {
     const mockData = parseMockData(giftCode);
     console.log('生成的 mock 数据:', JSON.stringify(mockData));
     
+    // 如果 mockData 为空，跳过修改
+    if (mockData.length === 0) {
+        console.log('mock 数据为空，跳过修改');
+        $done({});
+        return;
+    }
+    
     // 构建响应体
     const responseBody = {
         activity_id: "TDS20260812151632J4I",
@@ -106,7 +118,7 @@ if ($response) {
     };
     
     console.log('修改后的响应:', JSON.stringify(responseBody));
-    console.log('=== 响应修改结束 ===');
+    console.log('=== 百层试炼响应修改结束 ===');
     
     // 返回修改后的响应
     $done({
