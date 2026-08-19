@@ -1,16 +1,14 @@
-// fakebc.js - 针对 bad.com 的请求处理
-if ($request.url.indexOf("ad") !== -1) {
-  // 拦截请求，返回空数据或自定义响应
+// 在脚本开头添加检查
+if (typeof $request === 'undefined' || !$request.url) {
+  // 如果没有$request对象，直接放行
+  $done({});
+}
+
+// 后续代码
+if ($request && $request.url && $request.url.indexOf("bad.com") !== -1) {
   $done({
     status: 200,
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ 
-      code: 0, 
-      msg: "Request blocked by QX script",
-      data: null 
-    })
+    body: "{}"
   });
 }
 $done({});
