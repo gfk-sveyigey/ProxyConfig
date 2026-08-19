@@ -1,12 +1,15 @@
-// Quantumult X 请求拦截脚本
-// 使用 script-request-header 类型
+// mock-response.js
+// Quantumult X 响应修改脚本
 
-if ($request) {
-    console.log('=== 请求拦截开始 ===');
-    console.log('原始URL:', $request.url);
-    console.log('请求方法:', $request.method);
-    console.log('请求头:', JSON.stringify($request.headers));
-    console.log('请求体:', $request.body);
+if ($response) {
+    console.log('=== 响应修改开始 ===');
+    console.log('请求URL:', $request.url);
+    console.log('原始响应状态:', $response.status);
+    
+    // 模拟数据
+    const mockData = [
+        { name: "281", number: 1 }
+    ];
     
     // 解析请求体
     let requestBody = {};
@@ -27,13 +30,6 @@ if ($request) {
         return result;
     }
     
-    // 模拟响应数据
-    const mockData = [
-        { name: "281", number: 1 },
-        { name: "282", number: 2 },
-        { name: "283", number: 3 }
-    ];
-    
     // 构建响应体
     const responseBody = {
         activity_id: "TDS20260812151632J4I",
@@ -48,20 +44,16 @@ if ($request) {
         timestamp: requestBody.timestamp || Math.floor(Date.now() / 1000)
     };
     
-    console.log('模拟响应数据:', JSON.stringify(responseBody));
-    console.log('=== 请求拦截结束 ===');
+    console.log('修改后的响应:', JSON.stringify(responseBody));
+    console.log('=== 响应修改结束 ===');
     
-    // 关键：使用 $done 返回 response 对象来阻断请求
+    // 返回修改后的响应
     $done({
-        response: {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(responseBody)
-        }
+        status: 200,
+        headers: $response.headers,
+        body: JSON.stringify(responseBody)
     });
 } else {
-    console.log('没有请求对象');
+    console.log('没有响应对象');
     $done({});
 }
