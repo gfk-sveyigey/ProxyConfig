@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes, viewport-fit=cover">
+    <title>名称模糊查询 · 编号兑换码</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f0f4fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            margin: 0;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            font-size: 1.7rem;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2px;
+        }
+
+        .search-section {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f8fafd;
+            border: 1.5px solid #d9e2f0;
+            border-radius: 60px;
+            padding: 4px 6px 4px 18px;
+            transition: border 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .search-box:focus-within {
+            border-color: #6c8ef5;
+            box-shadow: 0 0 0 4px rgba(108, 142, 245, 0.15);
+            background: #ffffff;
+        }
+
+        .search-icon {
+            color: #8094b3;
+            margin-right: 8px;
+            font-size: 1.1rem;
+        }
+
+        #searchInput {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 0;
+            font-size: 0.95rem;
+            outline: none;
+            color: #1e293b;
+            font-weight: 500;
+            min-width: 0;
+            caret-color: #1d4a9e;
+        }
+
+        #searchInput::placeholder {
+            color: #a3b3cc;
+            font-weight: 400;
+        }
+
+        .clear-btn {
+            background: #eef2f8;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #59748f;
+            font-size: 1.1rem;
+            margin-right: 4px;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .clear-btn:hover {
+            background: #e1e8f2;
+            color: #1e3a5f;
+        }
+
+        .result-panel {
+            background: #f9fbfe;
+            border-radius: 18px;
+            padding: 8px;
+            min-height: 140px;
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid #e9eef6;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px;
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: 1px solid transparent;
+            font-weight: 500;
+            gap: 8px;
+        }
+
+        .result-item:hover {
+            background: #f0f4ff;
+            border-color: #cbd9fc;
+            transform: translateY(-1px);
+        }
+
+        .result-name {
+            font-size: 0.95rem;
+            color: #1f2e4a;
+            word-break: break-word;
+        }
+
+        .result-id {
+            background: #eef3fe;
+            color: #2a4e9b;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #9aaec9;
+            padding: 24px 10px;
+            font-size: 0.9rem;
+        }
+
+        .selected-section {
+            margin-top: 2px;
+        }
+
+        .selected-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .selected-header h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #283b5b;
+        }
+
+        .selected-count {
+            background: #dbe8fe;
+            color: #1d4a9e;
+            font-weight: 600;
+            border-radius: 40px;
+            padding: 3px 12px;
+            font-size: 0.8rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            border: none;
+            background: white;
+            border: 1px solid #cfddf2;
+            border-radius: 40px;
+            padding: 8px 14px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #1f3a6e;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            background: #f4f8ff;
+            border-color: #9bb8f0;
+        }
+
+        .batch-btn {
+            background: #f0f5ff;
+            border-color: #b7cbf0;
+        }
+
+        .clear-selected-btn {
+            background: #ffffff;
+            color: #a33d3d;
+            border-color: #f0d1d1;
+        }
+
+        .clear-selected-btn:hover {
+            background: #fff2f2;
+            border-color: #e2a5a5;
+        }
+
+        .generate-btn {
+            background: #1d4a9e;
+            color: white;
+            border-color: #1d4a9e;
+        }
+
+        .generate-btn:hover {
+            background: #153e87;
+        }
+
+        .batch-panel {
+            background: #f4f8ff;
+            border-radius: 16px;
+            padding: 14px;
+            border: 1px solid #d5e2fa;
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .batch-panel-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .batch-panel-title {
+            font-weight: 700;
+            color: #1d3a7a;
+            font-size: 1rem;
+        }
+
+        .batch-checkbox-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 4px 2px;
+        }
+
+        .batch-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            border: 1px solid #dbe4f5;
+            border-radius: 30px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+            user-select: none;
+        }
+
+        .batch-checkbox-item:hover {
+            background: #eef4ff;
+            border-color: #a8c2f0;
+        }
+
+        .batch-checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: #1d4a9e;
+        }
+
+        .batch-apply-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-top: 1px solid #dbe4f5;
+            padding-top: 12px;
+        }
+
+        .batch-apply-row label {
+            font-weight: 600;
+            color: #2b4f8c;
+            font-size: 0.9rem;
+        }
+
+        .batch-apply-row input {
+            width: 90px;
+            padding: 8px 10px;
+            border: 1px solid #ccdaf2;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            outline: none;
+            text-align: center;
+            caret-color: #1d4a9e;
+        }
+
+        .batch-apply-row input:focus {
+            border-color: #6c8ef5;
+            box-shadow: 0 0 0 3px rgba(108, 142, 245, 0.2);
+        }
+
+        .batch-apply-btn {
+            background: #1d4a9e;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 9px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .batch-apply-btn:hover {
+            background: #153e87;
+        }
+
+        .batch-apply-btn-all {
+            background: #4f6f9e;
+        }
+
+        .batch-apply-btn-all:hover {
+            background: #3d5a80;
+        }
+
+        .batch-cancel-btn {
+            background: white;
+            border: 1px solid #cfddf2;
+            border-radius: 30px;
+            padding: 9px 14px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            color: #1f3a6e;
+            white-space: nowrap;
+        }
+
+        .selected-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #f8faff;
+            border-radius: 18px;
+            padding: 14px 12px;
+            border: 1px solid #e2eaf9;
+            min-height: 80px;
+        }
+
+        .selected-chip {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #d3def5;
+            border-radius: 16px;
+            padding: 10px 12px;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+            font-weight: 500;
+            color: #1f3a6e;
+            flex-wrap: wrap;
+        }
+
+        .chip-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: auto;
+            flex-wrap: wrap;
+            min-width: 0;
+        }
+
+        .chip-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            word-break: break-word;
+        }
+
+        .chip-id-badge {
+            background: #eef2fb;
+            border-radius: 30px;
+            padding: 3px 10px;
+            font-size: 0.8rem;
+            color: #33538c;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #f2f6fe;
+            padding: 3px 6px;
+            border-radius: 40px;
+            flex-shrink: 0;
+        }
+
+        .qty-btn {
+            background: white;
+            border: 1px solid #c9d8f2;
+            width: 30px;
+            height: 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #1d4a9e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.1s;
+            flex-shrink: 0;
+        }
+
+        .qty-btn:hover {
+            background: #e0ebff;
+            border-color: #8aaef0;
+        }
+
+        .qty-input {
+            width: 70px;
+            text-align: center;
+            border: 1px solid #ccdaf2;
+            border-radius: 20px;
+            padding: 6px 4px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            outline: none;
+            background: white;
+            caret-color: #1d4a9e;
+        }
+
+        .qty-input:focus {
+            border-color: #6c8ef5;
+            box-shadow: 0 0 0 3px rgba(108, 142, 245, 0.25);
+        }
+
+        .remove-chip-btn {
+            background: transparent;
+            border: none;
+            color: #b44848;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 4px 6px;
+            border-radius: 30px;
+            transition: 0.15s;
+            flex-shrink: 0;
+        }
+
+        .remove-chip-btn:hover {
+            background: #ffefef;
+        }
+
+        .selected-placeholder {
+            color: #a0b4d1;
+            font-size: 0.9rem;
+            padding: 8px 4px;
+            font-style: italic;
+            text-align: center;
+        }
+
+        @media (max-width: 600px) {
+            .app-container {
+                padding: 18px 12px;
+                border-radius: 20px;
+                gap: 16px;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+            }
+
+            .action-buttons {
+                gap: 6px;
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .action-btn {
+                padding: 7px 12px;
+                font-size: 0.8rem;
+                gap: 3px;
+            }
+
+            .selected-chip {
+                padding: 8px 10px;
+                gap: 8px;
+            }
+
+            .qty-control {
+                gap: 4px;
+                padding: 2px 4px;
+            }
+
+            .qty-btn {
+                width: 28px;
+                height: 28px;
+            }
+
+            .qty-input {
+                width: 60px;
+                padding: 5px 2px;
+                font-size: 0.85rem;
+            }
+
+            .batch-apply-row {
+                gap: 6px;
+            }
+
+            .batch-apply-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .selected-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .action-buttons {
+                margin-left: 0;
+            }
+
+            .chip-info {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>🔍 查询编号</h1>
+
+        <div class="search-section">
+            <div class="search-box">
+                <span class="search-icon">🔎</span>
+                <input type="text" id="searchInput" placeholder="输入名称关键字" autocomplete="off">
+                <button class="clear-btn" id="clearButton" title="清除搜索">✕</button>
+            </div>
+            <div class="result-panel" id="resultPanel"></div>
+        </div>
+
+        <div class="selected-section">
+            <div class="selected-header">
+                <h2>✅ 已选中</h2>
+                <span class="selected-count" id="selectedCount">0 项</span>
+                <div class="action-buttons">
+                    <button class="action-btn batch-btn" id="batchModifyBtn">📦 批量修改</button>
+                    <button class="action-btn clear-selected-btn" id="clearAllSelectedBtn">🗑️ 全部清除</button>
+                    <button class="action-btn generate-btn" id="generateCodeBtn">🎁 生成兑换码</button>
+                </div>
+            </div>
+
+            <div class="batch-panel" id="batchPanel" style="display: none;">
+                <div class="batch-panel-header">
+                    <span class="batch-panel-title">📦 批量修改数量</span>
+                    <span style="font-size:0.8rem; color:#5a7299;">请勾选物品并设置统一数量</span>
+                </div>
+                <div class="batch-checkbox-list" id="batchCheckboxList"></div>
+                <div class="batch-apply-row">
+                    <label>统一数量：</label>
+                    <input type="number" id="batchQtyInput" min="1" step="1" value="1" placeholder="数量">
+                    <button class="batch-apply-btn batch-apply-btn-all" id="batchApplyAllBtn">应用到全部</button>
+                    <button class="batch-apply-btn" id="batchApplySelectedBtn">应用到勾选项</button>
+                    <button class="batch-cancel-btn" id="batchCancelBtn">取消</button>
+                </div>
+            </div>
+
+            <div class="selected-list" id="selectedList">
+                <span class="selected-placeholder">点击上方结果添加物品</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // 完整编码对应数据
+            const dataItems = [
+                { id: 1, name: "金币" },
+                { id: 2, name: "彩钻" },
+                { id: 3, name: "经验值" },
+                { id: 4, name: "技能值" },
+                { id: 5, name: "广告券" },
+                { id: 6, name: "潜能点" },
+                { id: 7, name: "遗产碎片" },
+                { id: 8, name: "元宝" },
+                { id: 9, name: "地精贡品" },
+                { id: 10, name: "普通之星" },
+                { id: 11, name: "中等之星" },
+                { id: 12, name: "困难之星" },
+                { id: 13, name: "炼狱之星" },
+                { id: 14, name: "噩梦之星" },
+                { id: 15, name: "深渊之星" },
+                { id: 100, name: "装备强化石" },
+                { id: 101, name: "绿色怪物精髓" },
+                { id: 102, name: "蓝色怪物精髓" },
+                { id: 103, name: "紫色怪物精髓" },
+                { id: 104, name: "橙色怪物精髓" },
+                { id: 105, name: "绿色首领精髓" },
+                { id: 106, name: "蓝色首领精髓" },
+                { id: 107, name: "紫色首领精髓" },
+                { id: 108, name: "橙色首领精髓" },
+                { id: 109, name: "装备星石" },
+                { id: 110, name: "词缀强化石" },
+                { id: 111, name: "词缀洗练石" },
+                { id: 112, name: "词缀增加石" },
+                { id: 113, name: "开孔锤" },
+                { id: 114, name: "技能碎片" },
+                { id: 115, name: "宝石随即箱" },
+                { id: 116, name: "等级丹" },
+                { id: 117, name: "技能丹" },
+                { id: 118, name: "潜能果实" },
+                { id: 119, name: "技能装置" },
+                { id: 120, name: "点击装置" },
+                { id: 121, name: "转生证明" },
+                { id: 122, name: "灵魂结晶" },
+                { id: 123, name: "特权卡" },
+                { id: 124, name: "神奇果实" },
+                { id: 125, name: "金币增幅药水" },
+                { id: 126, name: "经验增幅药水" },
+                { id: 127, name: "技能增幅药水" },
+                { id: 128, name: "好运礼盒" },
+                { id: 129, name: "宠物契约" },
+                { id: 130, name: "通关令牌I" },
+                { id: 131, name: "通关令牌II" },
+                { id: 132, name: "通关令牌III" },
+                { id: 133, name: "通关令牌IV" },
+                { id: 134, name: "通关令牌V" },
+                { id: 135, name: "通关令牌VI" },
+                { id: 136, name: "骨头肉" },
+                { id: 137, name: "多色丸子" },
+                { id: 138, name: "奇怪的汤" },
+                { id: 139, name: "珍珠" },
+                { id: 140, name: "潜力胶囊(神器)" },
+                { id: 141, name: "神奇粉末(神器)" },
+                { id: 142, name: "琼浆玉露(神器)" },
+                { id: 143, name: "智慧之书(神器)" },
+                { id: 144, name: "恶魔之翼(神器)" },
+                { id: 145, name: "科技能源(神器)" },
+                { id: 146, name: "变频螺丝(神器)" },
+                { id: 147, name: "野兽獠牙(神器)" },
+                { id: 148, name: "坍塌核心(神器)" },
+                { id: 149, name: "通关令牌Max" },
+                { id: 150, name: "挂机装置" },
+                { id: 151, name: "信息记录装置" },
+                { id: 152, name: "尖刺南瓜(神器)" },
+                { id: 153, name: "挂机图腾(周)" },
+                { id: 154, name: "挂机图腾(月)" },
+                { id: 155, name: "火焰辣椒" },
+                { id: 156, name: "神器精华(小)" },
+                { id: 157, name: "神器精华(中)" },
+                { id: 158, name: "神器精华(大)" },
+                { id: 159, name: "锻造矿石(神器)" },
+                { id: 160, name: "力量晶萃(神器)" },
+                { id: 161, name: "敏捷晶萃(神器)" },
+                { id: 162, name: "智力晶萃(神器)" },
+                { id: 163, name: "幸运晶萃(神器)" },
+                { id: 164, name: "灵能葫芦(神器)" },
+                { id: 165, name: "时空原石(神器)" },
+                { id: 166, name: "未发芽的种子" },
+                { id: 167, name: "饱腹乳猪(神器)" },
+                { id: 168, name: "攻击资质果实" },
+                { id: 169, name: "速度资质果实" },
+                { id: 170, name: "伤害资质果实" },
+                { id: 171, name: "技能资质果实" },
+                { id: 172, name: "暴伤资质果实" },
+                { id: 173, name: "魂石" },
+                { id: 174, name: "自转齿轮(神器)" },
+                { id: 175, name: "后悔鱼汤(神器)" },
+                { id: 176, name: "令牌法珠I(神器)" },
+                { id: 177, name: "令牌法珠II(神器)" },
+                { id: 178, name: "令牌法珠III(神器)" },
+                { id: 179, name: "令牌法珠IV(神器)" },
+                { id: 180, name: "令牌法珠V(神器)" },
+                { id: 181, name: "令牌法珠VI(神器)" },
+                { id: 182, name: "令牌法珠Max(神器)" },
+                { id: 183, name: "转生果实" },
+                { id: 184, name: "转生莲花(神器)" },
+                { id: 185, name: "自动点击器(神器)" },
+                { id: 186, name: "变体黄瓜(神器)" },
+                { id: 187, name: "冶炼镔铁(神器)" },
+                { id: 188, name: "璀璨砖石(神器)" },
+                { id: 189, name: "宝石晶萃(神器)" },
+                { id: 190, name: "催熟因子" },
+                { id: 191, name: "希望之花" },
+                { id: 192, name: "神奇花朵(神器)" },
+                { id: 193, name: "变换符石" },
+                { id: 194, name: "遗忘之花" },
+                { id: 195, name: "无尽药剂(神器)" },
+                { id: 196, name: "试炼药剂(神器)" },
+                { id: 197, name: "殿堂药剂(神器)" },
+                { id: 198, name: "时光沙漏(神器)" },
+                { id: 199, name: "千年灵芝(神器)" },
+                { id: 200, name: "刷怪增幅药水" },
+                { id: 201, name: "漆黑煤球(神器)" },
+                { id: 202, name: "定制词缀" },
+                { id: 203, name: "定制宠物" },
+                { id: 204, name: "高转凭证(周)" },
+                { id: 205, name: "高转凭证(月)" },
+                { id: 206, name: "骑士印章(神器)" },
+                { id: 207, name: "金色花朵(神器)" },
+                { id: 208, name: "恐龙尾肉(神器)" },
+                { id: 209, name: "时空神石(神器)" },
+                { id: 210, name: "幸运锦鲤(神器)" },
+                { id: 211, name: "开荒礼包(高级)" },
+                { id: 212, name: "洞窟秘宝(白)" },
+                { id: 213, name: "洞窟秘宝(绿)" },
+                { id: 214, name: "洞窟秘宝(蓝)" },
+                { id: 215, name: "洞窟秘宝(紫)" },
+                { id: 216, name: "洞窟秘宝(橙)" },
+                { id: 217, name: "洞窟秘宝(红)" },
+                { id: 218, name: "秘宝碎片" },
+                { id: 219, name: "高转续时券(1分钟)" },
+                { id: 220, name: "高转续时券(3分钟)" },
+                { id: 221, name: "高转续时券(5分钟)" },
+                { id: 222, name: "高转续时券(10分钟)" },
+                { id: 223, name: "高转续时券(15分钟)" },
+                { id: 224, name: "高转续时券(30分钟)" },
+                { id: 225, name: "战士试炼通行证" },
+                { id: 226, name: "法师试炼通行证" },
+                { id: 227, name: "弓手试炼通行证" },
+                { id: 228, name: "盗贼试炼通行证" },
+                { id: 229, name: "暗淡的火花" },
+                { id: 230, name: "指南针(神器)" },
+                { id: 231, name: "秒计时钟(神器)" },
+                { id: 232, name: "探照雷达(神器)" },
+                { id: 233, name: "矿工帽(神器)" },
+                { id: 234, name: "细腻流沙(神器)" },
+                { id: 235, name: "一条咸鱼(神器)" },
+                { id: 236, name: "宠物资质果实礼盒" },
+                { id: 237, name: "技能符石自选包" },
+                { id: 238, name: "装备星级直升箱" },
+                { id: 239, name: "幻化礼包(小)" },
+                { id: 240, name: "幻化礼包(大)" },
+                { id: 241, name: "宝石礼盒(小)" },
+                { id: 242, name: "宝石礼盒(大)" },
+                { id: 243, name: "祭坛糯米" },
+                { id: 244, name: "白色资质果实" },
+                { id: 245, name: "烈焰火炬" },
+                { id: 246, name: "阳光绿叶(神器)" },
+                { id: 247, name: "洞窟神奇礼袋" },
+                { id: 248, name: "一堆糯米" },
+                { id: 249, name: "秘宝礼盒(小)" },
+                { id: 250, name: "秘宝礼盒(大)" },
+                { id: 251, name: "变换火花" },
+                { id: 252, name: "金色火花" },
+                { id: 253, name: "1小时收益丹" },
+                { id: 254, name: "人物矿点图纸" },
+                { id: 255, name: "宠物矿点图纸" },
+                { id: 256, name: "彩钻矿点图纸" },
+                { id: 257, name: "秘宝矿点图纸" },
+                { id: 258, name: "矿工契约" },
+                { id: 259, name: "矿工铁镐" },
+                { id: 260, name: "1小时收益丹(限)" },
+                { id: 261, name: "月影枯木(神器)" },
+                { id: 262, name: "进阶蓝莓(神器)" },
+                { id: 263, name: "无尽之路挑战卷轴" },
+                { id: 264, name: "宠物试炼挑战卷轴" },
+                { id: 265, name: "秘制丹药(神器)" },
+                { id: 266, name: "圆润茄子(神器)" },
+                { id: 267, name: "技能碎片结晶(神器)" },
+                { id: 268, name: "幻化球(神器)" },
+                { id: 269, name: "怪物骨汤(神器)" },
+                { id: 270, name: "金色矿石(神器)" },
+                { id: 271, name: "突破之星(神器)" },
+                { id: 272, name: "上古符文(神器)" },
+                { id: 273, name: "灵魂浆液(神器)" },
+                { id: 274, name: "进阶魔方(神器)" },
+                { id: 275, name: "金色石板(神器)" },
+                { id: 276, name: "龙血结晶(神器)" },
+                { id: 277, name: "魔法汤锅(神器)" },
+                { id: 278, name: "次元透镜(神器)" },
+                { id: 279, name: "橘橘波仙女(神器)" },
+                { id: 280, name: "离线高转丹" },
+                { id: 281, name: "进阶战令凭证" },
+                { id: 282, name: "巨人头颅" },
+                { id: 283, name: "恶魔沙漏(神器)" },
+                { id: 284, name: "基因捕获器(神器)" },
+                { id: 285, name: "四色轮盘(神器)" },
+                { id: 286, name: "巨人遗迹挑战卷轴" },
+                { id: 287, name: "基因胶囊" },
+                { id: 288, name: "力量果实" },
+                { id: 289, name: "敏捷果实" },
+                { id: 290, name: "智力果实" },
+                { id: 291, name: "幸运果实" },
+                { id: 292, name: "高级力量果实" },
+                { id: 293, name: "高级敏捷果实" },
+                { id: 294, name: "高级智力果实" },
+                { id: 295, name: "高级幸运果实" },
+                { id: 296, name: "高级等级丹" },
+                { id: 297, name: "高级潜能果实" },
+                { id: 298, name: "高级奇怪的汤" },
+                { id: 299, name: "高级多色丸子" },
+                { id: 300, name: "巨人遗迹重置卷轴" },
+                { id: 301, name: "宠物祭坛挑战卷轴" },
+                { id: 302, name: "英勇凭证(神器)" },
+                { id: 303, name: "金色集成模组(神器)" },
+                { id: 304, name: "森林甘露" },
+                { id: 305, name: "白色卡牌" },
+                { id: 306, name: "成长罐头" },
+                { id: 307, name: "日照石" },
+                { id: 308, name: "宠物森林重置卷轴" },
+                { id: 309, name: "节日礼盒" },
+                { id: 310, name: "变异神奇果实" },
+                { id: 311, name: "印记书籍" },
+                { id: 312, name: "矿石粉末" },
+                { id: 313, name: "幻化药水" },
+                { id: 314, name: "宠物魔法鸡腿" },
+                { id: 315, name: "宠物魔法之星" },
+                { id: 316, name: "宠物魔法药水" },
+                { id: 317, name: "熔炼之星" },
+                { id: 318, name: "锻造之锤" },
+                { id: 319, name: "基因重组针" },
+                { id: 320, name: "巨人果实养料" },
+                { id: 321, name: "节日战令凭证" },
+                { id: 322, name: "能量细沙" },
+                { id: 323, name: "日夜胶囊" },
+                { id: 324, name: "地精采购清单" },
+                { id: 325, name: "矿洞炸药" },
+                { id: 326, name: "高级转生果实" },
+                { id: 327, name: "洞窟矿石" },
+                { id: 328, name: "宝石粉末" },
+                { id: 329, name: "宝石精华" },
+                { id: 330, name: "战斗记录仪" },
+                { id: 331, name: "无尽勋章(神器)" },
+                { id: 332, name: "魔法土壤(神器)" },
+                { id: 333, name: "矿石背包(神器)" },
+                { id: 334, name: "星牌收纳箱(神器)" },
+                { id: 335, name: "躲避护符(神器)" },
+                { id: 336, name: "合击叉戟(神器)" },
+                { id: 337, name: "灵魂晶球(神器)" },
+                { id: 338, name: "技能古籍(神器)" },
+                { id: 339, name: "火龙果(神器)" },
+                { id: 340, name: "驱魔石(神器)" },
+                { id: 341, name: "小开开的奶嘴(神器)" },
+                { id: 342, name: "基因捕获器B型(神器)" },
+                { id: 343, name: "试炼法阵(神器)" },
+                { id: 344, name: "祭坛石碑(神器)" },
+                { id: 345, name: "地精算盘(神器)" },
+                { id: 346, name: "聚合能量仪(神器)" },
+                { id: 347, name: "日夜权杖(神器)" },
+                { id: 348, name: "王冠之证(神器)" },
+                { id: 349, name: "彩色属性果实(神器)" },
+                { id: 350, name: "彩色上限果实(神器)" },
+                { id: 351, name: "英勇凭证II(神器)" },
+                { id: 352, name: "英勇凭证III(神器)" },
+                { id: 353, name: "神器古树(成长型神器)" },
+                { id: 354, name: "矿场钻机(成长型神器)" },
+                { id: 355, name: "可控引力场(成长型神器)" },
+                { id: 356, name: "暴击转盘(成长型神器)" },
+                { id: 357, name: "贪婪之瞳(成长型神器)" },
+                { id: 358, name: "时空秘钥(成长型神器)" },
+                { id: 359, name: "巢穴晶石" },
+                { id: 360, name: "巨人宝箱1号(神器)" },
+                { id: 361, name: "巨人宝箱2号(神器)" },
+                { id: 362, name: "巨人宝箱3号(神器)" },
+                { id: 363, name: "巨人宝箱钥匙(神器)" },
+                { id: 364, name: "转换货单(神器)" },
+                { id: 365, name: "时砂怀表(神器)" },
+                { id: 366, name: "无尽魔晶" },
+                { id: 367, name: "试炼魔晶" },
+                { id: 368, name: "洞窟魔晶" },
+                { id: 369, name: "祭坛魔晶" },
+                { id: 370, name: "森林魔晶" },
+                { id: 371, name: "怪物巢穴挑战卷轴" },
+                { id: 372, name: "无尽奖杯(成长型神器)" },
+                { id: 373, name: "试炼奖杯(已作废)" },
+                { id: 374, name: "祭坛奖杯(已作废)" },
+                { id: 375, name: "幸运三叶草(成长型神器)" },
+                { id: 376, name: "日之石" },
+                { id: 377, name: "夜之石" },
+                { id: 378, name: "谜之石块" },
+                { id: 379, name: "远古战士雕像" },
+                { id: 380, name: "远古法师雕像" },
+                { id: 381, name: "远古弓手雕像" },
+                { id: 382, name: "远古盗贼雕像" },
+                { id: 383, name: "无尽药片" },
+                { id: 384, name: "试炼药片" },
+                { id: 385, name: "洞窟药片" },
+                { id: 386, name: "祭坛药片" },
+                { id: 387, name: "远古基因(神器)" },
+                { id: 388, name: "彩钻礼盒" },
+                { id: 389, name: "转生果实礼盒" },
+                { id: 390, name: "怪物遗产礼盒" },
+                { id: 391, name: "宠物契约礼盒" },
+                { id: 392, name: "战士图腾" },
+                { id: 393, name: "法师图腾" },
+                { id: 394, name: "射手图腾" },
+                { id: 395, name: "盗贼图腾" },
+                { id: 396, name: "宠物图腾" },
+                { id: 397, name: "主动电池" },
+                { id: 398, name: "点击电池" },
+                { id: 399, name: "自动电池" },
+                { id: 400, name: "黄色枫叶(神器)" },
+                { id: 401, name: "蓝色枫叶(神器)" },
+                { id: 402, name: "红色枫叶(神器)" },
+                { id: 403, name: "无尽精铁(神器)" },
+                { id: 404, name: "调和果酱(神器)" },
+                { id: 405, name: "巢穴便当(神器)" },
+                { id: 406, name: "铜制矿灯(神器)" },
+                { id: 407, name: "魔法天平(神器)" },
+                { id: 1101, name: "力量宝石Lv.1" },
+                { id: 1102, name: "力量宝石Lv.2" },
+                { id: 1103, name: "力量宝石Lv.3" },
+                { id: 1104, name: "力量宝石Lv.4" },
+                { id: 1105, name: "力量宝石Lv.5" },
+                { id: 1106, name: "力量宝石Lv.6" },
+                { id: 1107, name: "力量宝石Lv.7" },
+                { id: 1108, name: "力量宝石Lv.8" },
+                { id: 1109, name: "力量宝石Lv.9" },
+                { id: 1110, name: "力量宝石Lv.10" },
+                { id: 1111, name: "力量宝石Lv.11" },
+                { id: 1112, name: "力量宝石Lv.12" },
+                { id: 1113, name: "力量宝石Lv.13" },
+                { id: 1114, name: "力量宝石Lv.14" },
+                { id: 1115, name: "力量宝石Lv.15" },
+                { id: 1116, name: "力量宝石Lv.16" },
+                { id: 1117, name: "力量宝石Lv.17" },
+                { id: 1118, name: "力量宝石Lv.18" },
+                { id: 1119, name: "力量宝石Lv.19" },
+                { id: 1120, name: "力量宝石Lv.20" },
+                { id: 1121, name: "力量宝石Lv.21" },
+                { id: 1122, name: "力量宝石Lv.22" },
+                { id: 1123, name: "力量宝石Lv.23" },
+                { id: 1124, name: "力量宝石Lv.24" },
+                { id: 1125, name: "力量宝石Lv.25" },
+                { id: 1201, name: "敏捷宝石Lv.1" },
+                { id: 1202, name: "敏捷宝石Lv.2" },
+                { id: 1203, name: "敏捷宝石Lv.3" },
+                { id: 1204, name: "敏捷宝石Lv.4" },
+                { id: 1205, name: "敏捷宝石Lv.5" },
+                { id: 1206, name: "敏捷宝石Lv.6" },
+                { id: 1207, name: "敏捷宝石Lv.7" },
+                { id: 1208, name: "敏捷宝石Lv.8" },
+                { id: 1209, name: "敏捷宝石Lv.9" },
+                { id: 1210, name: "敏捷宝石Lv.10" },
+                { id: 1211, name: "敏捷宝石Lv.11" },
+                { id: 1212, name: "敏捷宝石Lv.12" },
+                { id: 1213, name: "敏捷宝石Lv.13" },
+                { id: 1214, name: "敏捷宝石Lv.14" },
+                { id: 1215, name: "敏捷宝石Lv.15" },
+                { id: 1216, name: "敏捷宝石Lv.16" },
+                { id: 1217, name: "敏捷宝石Lv.17" },
+                { id: 1218, name: "敏捷宝石Lv.18" },
+                { id: 1219, name: "敏捷宝石Lv.19" },
+                { id: 1220, name: "敏捷宝石Lv.20" },
+                { id: 1221, name: "敏捷宝石Lv.21" },
+                { id: 1222, name: "敏捷宝石Lv.22" },
+                { id: 1223, name: "敏捷宝石Lv.23" },
+                { id: 1224, name: "敏捷宝石Lv.24" },
+                { id: 1225, name: "敏捷宝石Lv.25" },
+                { id: 1301, name: "智力宝石Lv.1" },
+                { id: 1302, name: "智力宝石Lv.2" },
+                { id: 1303, name: "智力宝石Lv.3" },
+                { id: 1304, name: "智力宝石Lv.4" },
+                { id: 1305, name: "智力宝石Lv.5" },
+                { id: 1306, name: "智力宝石Lv.6" },
+                { id: 1307, name: "智力宝石Lv.7" },
+                { id: 1308, name: "智力宝石Lv.8" },
+                { id: 1309, name: "智力宝石Lv.9" },
+                { id: 1310, name: "智力宝石Lv.10" },
+                { id: 1311, name: "智力宝石Lv.11" },
+                { id: 1312, name: "智力宝石Lv.12" },
+                { id: 1313, name: "智力宝石Lv.13" },
+                { id: 1314, name: "智力宝石Lv.14" },
+                { id: 1315, name: "智力宝石Lv.15" },
+                { id: 1316, name: "智力宝石Lv.16" },
+                { id: 1317, name: "智力宝石Lv.17" },
+                { id: 1318, name: "智力宝石Lv.18" },
+                { id: 1319, name: "智力宝石Lv.19" },
+                { id: 1320, name: "智力宝石Lv.20" },
+                { id: 1321, name: "智力宝石Lv.21" },
+                { id: 1322, name: "智力宝石Lv.22" },
+                { id: 1323, name: "智力宝石Lv.23" },
+                { id: 1324, name: "智力宝石Lv.24" },
+                { id: 1325, name: "智力宝石Lv.25" },
+                { id: 1401, name: "幸运宝石Lv.1" },
+                { id: 1402, name: "幸运宝石Lv.2" },
+                { id: 1403, name: "幸运宝石Lv.3" },
+                { id: 1404, name: "幸运宝石Lv.4" },
+                { id: 1405, name: "幸运宝石Lv.5" },
+                { id: 1406, name: "幸运宝石Lv.6" },
+                { id: 1407, name: "幸运宝石Lv.7" },
+                { id: 1408, name: "幸运宝石Lv.8" },
+                { id: 1409, name: "幸运宝石Lv.9" },
+                { id: 1410, name: "幸运宝石Lv.10" },
+                { id: 1411, name: "幸运宝石Lv.11" },
+                { id: 1412, name: "幸运宝石Lv.12" },
+                { id: 1413, name: "幸运宝石Lv.13" },
+                { id: 1414, name: "幸运宝石Lv.14" },
+                { id: 1415, name: "幸运宝石Lv.15" },
+                { id: 1416, name: "幸运宝石Lv.16" },
+                { id: 1417, name: "幸运宝石Lv.17" },
+                { id: 1418, name: "幸运宝石Lv.18" },
+                { id: 1419, name: "幸运宝石Lv.19" },
+                { id: 1420, name: "幸运宝石Lv.20" },
+                { id: 1421, name: "幸运宝石Lv.21" },
+                { id: 1422, name: "幸运宝石Lv.22" },
+                { id: 1423, name: "幸运宝石Lv.23" },
+                { id: 1424, name: "幸运宝石Lv.24" },
+                { id: 1425, name: "幸运宝石Lv.25" },
+                { id: 1501, name: "力敏宝石Lv.25" },
+                { id: 1502, name: "力智宝石Lv.25" },
+                { id: 1503, name: "力运宝石Lv.25" },
+                { id: 1504, name: "敏智宝石Lv.25" },
+                { id: 1505, name: "敏运宝石Lv.25" },
+                { id: 1506, name: "智运宝石Lv.25" },
+                { id: 1601, name: "力敏智宝石Lv.25" },
+                { id: 1602, name: "力敏运宝石Lv.25" },
+                { id: 1603, name: "力智运宝石Lv.25" },
+                { id: 1604, name: "敏智运宝石Lv.25" },
+                { id: 1701, name: "全能宝石Lv.25" },
+                { id: 2001, name: "[撕裂要害+]符石" },
+                { id: 2002, name: "[九重狐火+]符石" },
+                { id: 2003, name: "[武魂+]符石" },
+                { id: 2004, name: "[生命燃烧+]符石" },
+                { id: 2005, name: "[灵魂随从A+]符石" },
+                { id: 2006, name: "[炎爆+]符石" },
+                { id: 2007, name: "[协战+]符石" },
+                { id: 2008, name: "[净瓶+]符石" },
+                { id: 2009, name: "[灵魂随从B+]符石" },
+                { id: 2010, name: "[机甲躯体+]符石" },
+                { id: 2011, name: "[秘术+]符石" },
+                { id: 2012, name: "[折磨+]符石" },
+                { id: 2013, name: "[护卫+]符石" },
+                { id: 3001, name: "[精准打击D]火花" },
+                { id: 3002, name: "[精准打击C]火花" },
+                { id: 3003, name: "[精准打击B]火花" },
+                { id: 3004, name: "[精准打击A]火花" },
+                { id: 3005, name: "[精准打击S]火花" },
+                { id: 3006, name: "[精准打击S+]火花" },
+                { id: 3007, name: "[体温恒定D]火花" },
+                { id: 3008, name: "[体温恒定C]火花" },
+                { id: 3009, name: "[体温恒定B]火花" },
+                { id: 3010, name: "[体温恒定A]火花" },
+                { id: 3011, name: "[体温恒定S]火花" },
+                { id: 3012, name: "[体温恒定S+]火花" },
+                { id: 3013, name: "[模仿D]火花" },
+                { id: 3014, name: "[模仿C]火花" },
+                { id: 3015, name: "[模仿B]火花" },
+                { id: 3016, name: "[模仿A]火花" },
+                { id: 3017, name: "[模仿S]火花" },
+                { id: 3018, name: "[模仿S+]火花" },
+                { id: 3019, name: "[残暴D]火花" },
+                { id: 3020, name: "[残暴C]火花" },
+                { id: 3021, name: "[残暴B]火花" },
+                { id: 3022, name: "[残暴A]火花" },
+                { id: 3023, name: "[残暴S]火花" },
+                { id: 3024, name: "[残暴S+]火花" },
+                { id: 3025, name: "[借势D]火花" },
+                { id: 3026, name: "[借势C]火花" },
+                { id: 3027, name: "[借势B]火花" },
+                { id: 3028, name: "[借势A]火花" },
+                { id: 3029, name: "[借势S]火花" },
+                { id: 3030, name: "[借势S+]火花" },
+                { id: 3031, name: "[神罚D]火花" },
+                { id: 3032, name: "[神罚C]火花" },
+                { id: 3033, name: "[神罚B]火花" },
+                { id: 3034, name: "[神罚A]火花" },
+                { id: 3035, name: "[神罚S]火花" },
+                { id: 3036, name: "[神罚S+]火花" },
+                { id: 3037, name: "[普攻强化D]火花" },
+                { id: 3038, name: "[普攻强化C]火花" },
+                { id: 3039, name: "[普攻强化B]火花" },
+                { id: 3040, name: "[普攻强化A]火花" },
+                { id: 3041, name: "[普攻强化S]火花" },
+                { id: 3042, name: "[普攻强化S+]火花" },
+                { id: 3043, name: "[灵魂强化D]火花" },
+                { id: 3044, name: "[灵魂强化C]火花" },
+                { id: 3045, name: "[灵魂强化B]火花" },
+                { id: 3046, name: "[灵魂强化A]火花" },
+                { id: 3047, name: "[灵魂强化S]火花" },
+                { id: 3048, name: "[灵魂强化S+]火花" },
+                { id: 3049, name: "[变体D]火花" },
+                { id: 3050, name: "[变体C]火花" },
+                { id: 3051, name: "[变体B]火花" },
+                { id: 3052, name: "[变体A]火花" },
+                { id: 3053, name: "[变体S]火花" },
+                { id: 3054, name: "[变体S+]火花" },
+                { id: 3055, name: "[追逐D]火花" },
+                { id: 3056, name: "[追逐C]火花" },
+                { id: 3057, name: "[追逐B]火花" },
+                { id: 3058, name: "[追逐A]火花" },
+                { id: 3059, name: "[追逐S]火花" },
+                { id: 3060, name: "[追逐S+]火花" },
+                { id: 3061, name: "[暴伤强化D]火花" },
+                { id: 3062, name: "[暴伤强化C]火花" },
+                { id: 3063, name: "[暴伤强化B]火花" },
+                { id: 3064, name: "[暴伤强化A]火花" },
+                { id: 3065, name: "[暴伤强化S]火花" },
+                { id: 3066, name: "[暴伤强化S+]火花" },
+                { id: 3067, name: "[技能强化D]火花" },
+                { id: 3068, name: "[技能强化C]火花" },
+                { id: 3069, name: "[技能强化B]火花" },
+                { id: 3070, name: "[技能强化A]火花" },
+                { id: 3071, name: "[技能强化S]火花" },
+                { id: 3072, name: "[技能强化S+]火花" },
+                { id: 3073, name: "[伤害强化D]火花" },
+                { id: 3074, name: "[伤害强化C]火花" },
+                { id: 3075, name: "[伤害强化B]火花" },
+                { id: 3076, name: "[伤害强化A]火花" },
+                { id: 3077, name: "[伤害强化S]火花" },
+                { id: 3078, name: "[伤害强化S+]火花" },
+                { id: 4001, name: "魔法卡包" },
+                { id: 4002, name: "森林扫帚" },
+                { id: 4003, name: "宠物领结" },
+                { id: 4004, name: "森林罐头" },
+                { id: 10001, name: "《普通攻击》经验书" },
+                { id: 10002, name: "《点击攻击》经验书" },
+                { id: 10003, name: "《自动攻击》经验书" },
+                { id: 10004, name: "《光之剑》经验书" },
+                { id: 10005, name: "《怒气》经验书" },
+                { id: 10006, name: "《冥想》经验书" },
+                { id: 10007, name: "《龙族血脉》经验书" },
+                { id: 10008, name: "《破碎》经验书" },
+                { id: 10009, name: "《淬毒》经验书" },
+                { id: 10010, name: "《经验加成》经验书" },
+                { id: 10011, name: "《金币加成》经验书" },
+                { id: 10012, name: "《潜能加成》经验书" },
+                { id: 10013, name: "《蓄意轰拳》经验书" },
+                { id: 10014, name: "《烈火焚身》经验书" },
+                { id: 20001, name: "《华丽斩击》经验书" },
+                { id: 20002, name: "《步伐训练》经验书" },
+                { id: 20003, name: "《上肢强化》经验书" },
+                { id: 20004, name: "《力量精通》经验书" },
+                { id: 20005, name: "《风暴穿刺》经验书" },
+                { id: 20006, name: "《越战越勇》经验书" },
+                { id: 20007, name: "《吼叫》经验书" },
+                { id: 20008, name: "《灵魂穿刺》经验书" },
+                { id: 20009, name: "《涅槃》经验书" },
+                { id: 20010, name: "《力量印记》经验书" },
+                { id: 20011, name: "《烈焰刃》经验书" },
+                { id: 20012, name: "《行动恢复》经验书" },
+                { id: 20013, name: "《自动点击I》经验书" },
+                { id: 20014, name: "《光刃》经验书" },
+                { id: 20015, name: "《自动点击II》经验书" },
+                { id: 20016, name: "《点击精通》经验书" },
+                { id: 20017, name: "《驾驭之术》经验书" },
+                { id: 20018, name: "《宠物强化》经验书" },
+                { id: 20019, name: "《人宠合一》经验书" },
+                { id: 20020, name: "《驱动点击》经验书" },
+                { id: 20021, name: "《点击精通》经验书" },
+                { id: 20022, name: "《伤害增幅》经验书" },
+                { id: 30001, name: "《火球术》经验书" },
+                { id: 30002, name: "《寒冰刺》经验书" },
+                { id: 30003, name: "《智慧权杖》经验书" },
+                { id: 30004, name: "《元素之力》经验书" },
+                { id: 30005, name: "《网状闪电》经验书" },
+                { id: 30006, name: "《火龙卷》经验书" },
+                { id: 30007, name: "《秘术》经验书" },
+                { id: 30008, name: "《黑暗元素》经验书" },
+                { id: 30009, name: "《秘术权杖》经验书" },
+                { id: 30010, name: "《元素祈祷》经验书" },
+                { id: 30011, name: "《冰球》经验书" },
+                { id: 30012, name: "《水龙弹》经验书" },
+                { id: 30013, name: "《时间沙漏》经验书" },
+                { id: 30014, name: "《日芒射线》经验书" },
+                { id: 30015, name: "《魔力膨胀》经验书" },
+                { id: 30016, name: "《洞察》经验书" },
+                { id: 30017, name: "《能量储存》经验书" },
+                { id: 30018, name: "《极限冷却》经验书" },
+                { id: 30019, name: "《技能增幅》经验书" },
+                { id: 30020, name: "《法术觉醒》经验书" },
+                { id: 30021, name: "《法术连环》经验书" },
+                { id: 30022, name: "《自动精通》经验书" },
+                { id: 40001, name: "《射击》经验书" },
+                { id: 40002, name: "《多段射击》经验书" },
+                { id: 40003, name: "《丛林之力》经验书" },
+                { id: 40004, name: "《迅速》经验书" },
+                { id: 40005, name: "《火焰箭》经验书" },
+                { id: 40006, name: "《分裂箭》经验书" },
+                { id: 40007, name: "《集中》经验书" },
+                { id: 40008, name: "《群星陨落》经验书" },
+                { id: 40009, name: "《光之弓》经验书" },
+                { id: 40010, name: "《自然之力》经验书" },
+                { id: 40011, name: "《破坏之箭》经验书" },
+                { id: 40012, name: "《原始之力》经验书" },
+                { id: 40013, name: "《本能》经验书" },
+                { id: 40014, name: "《飞龙箭》经验书" },
+                { id: 40015, name: "《发现猎物》经验书" },
+                { id: 40016, name: "《机敏》经验书" },
+                { id: 40017, name: "《穿心箭》经验书" },
+                { id: 40018, name: "《主动精通》经验书" },
+                { id: 40019, name: "《终伤增幅》经验书" },
+                { id: 40020, name: "《突破极限》经验书" },
+                { id: 40021, name: "《腐蚀光环》经验书" },
+                { id: 40022, name: "《首领增幅》经验书" },
+                { id: 50001, name: "《刺杀》经验书" },
+                { id: 50002, name: "《阴影之力》经验书" },
+                { id: 50003, name: "《眷顾》经验书" },
+                { id: 50004, name: "《弱点突破》经验书" },
+                { id: 50005, name: "《暗杀》经验书" },
+                { id: 50006, name: "《经验之手》经验书" },
+                { id: 50007, name: "《金币之手》经验书" },
+                { id: 50008, name: "《暗爪》经验书" },
+                { id: 50009, name: "《财富之手》经验书" },
+                { id: 50010, name: "《避战》经验书" },
+                { id: 50011, name: "《多段斩击》经验书" },
+                { id: 50012, name: "《快速冷却》经验书" },
+                { id: 50013, name: "《速战速决》经验书" },
+                { id: 50014, name: "《幽冥之刃》经验书" },
+                { id: 50015, name: "《背刺》经验书" },
+                { id: 50016, name: "《幸运神》经验书" },
+                { id: 50017, name: "《斩杀》经验书" },
+                { id: 50018, name: "《强化窃取》经验书" },
+                { id: 50019, name: "《紧急回避》经验书" },
+                { id: 50020, name: "《竭心光环》经验书" },
+                { id: 50021, name: "《幸运数字7》经验书" },
+                { id: 50022, name: "《暴伤增幅》经验书" }
+            ];
+
+            const selectedMap = new Map();
+            let batchModeActive = false;
+
+            const searchInput = document.getElementById('searchInput');
+            const clearButton = document.getElementById('clearButton');
+            const resultPanel = document.getElementById('resultPanel');
+            const selectedList = document.getElementById('selectedList');
+            const selectedCountSpan = document.getElementById('selectedCount');
+            const clearAllSelectedBtn = document.getElementById('clearAllSelectedBtn');
+            const generateCodeBtn = document.getElementById('generateCodeBtn');
+            const batchModifyBtn = document.getElementById('batchModifyBtn');
+            const batchPanel = document.getElementById('batchPanel');
+            const batchCheckboxList = document.getElementById('batchCheckboxList');
+            const batchQtyInput = document.getElementById('batchQtyInput');
+            const batchApplyAllBtn = document.getElementById('batchApplyAllBtn');
+            const batchApplySelectedBtn = document.getElementById('batchApplySelectedBtn');
+            const batchCancelBtn = document.getElementById('batchCancelBtn');
+
+            function setupQtyInputBehavior(input) {
+                if (!input) return;
+                input.addEventListener('click', function(e) {
+                    if (document.activeElement !== this) this.focus();
+                    const len = this.value.length;
+                    this.setSelectionRange(len, len);
+                });
+                input.addEventListener('dblclick', function(e) {
+                    e.preventDefault();
+                    this.focus();
+                    this.select();
+                });
+            }
+
+            function renderResults() {
+                const query = searchInput.value.trim().toLowerCase();
+                let filteredItems = (query === '') 
+                    ? dataItems.slice() 
+                    : dataItems.filter(item => item.name.toLowerCase().includes(query));
+
+                resultPanel.innerHTML = '';
+
+                if (filteredItems.length === 0) {
+                    resultPanel.innerHTML = '<div class="empty-message">没有匹配的名称</div>';
+                    return;
+                }
+
+                filteredItems.forEach(item => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    resultItem.setAttribute('data-id', item.id);
+                    resultItem.setAttribute('data-name', item.name);
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'result-name';
+                    nameSpan.textContent = item.name;
+                    
+                    const idSpan = document.createElement('span');
+                    idSpan.className = 'result-id';
+                    idSpan.textContent = `#${item.id}`;
+                    
+                    resultItem.appendChild(nameSpan);
+                    resultItem.appendChild(idSpan);
+                    
+                    resultItem.addEventListener('click', function(e) {
+                        const clickedId = parseInt(this.getAttribute('data-id'), 10);
+                        const clickedName = this.getAttribute('data-name');
+                        if (!selectedMap.has(clickedId)) {
+                            selectedMap.set(clickedId, { id: clickedId, name: clickedName, quantity: 1 });
+                        }
+                        renderSelectedItems();
+                    });
+                    
+                    resultPanel.appendChild(resultItem);
+                });
+            }
+
+            function renderSelectedItems() {
+                selectedList.innerHTML = '';
+                const selectedArray = Array.from(selectedMap.values()).sort((a, b) => a.id - b.id);
+                const count = selectedArray.length;
+                selectedCountSpan.textContent = `${count} 项`;
+
+                if (count === 0) {
+                    selectedList.innerHTML = '<span class="selected-placeholder">点击上方结果添加物品</span>';
+                    if (batchModeActive) renderBatchCheckboxes();
+                    return;
+                }
+
+                selectedArray.forEach(item => {
+                    const chip = document.createElement('div');
+                    chip.className = 'selected-chip';
+                    
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'chip-info';
+                    
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'chip-name';
+                    nameSpan.textContent = item.name;
+                    
+                    const idBadge = document.createElement('span');
+                    idBadge.className = 'chip-id-badge';
+                    idBadge.textContent = `#${item.id}`;
+                    
+                    infoDiv.appendChild(nameSpan);
+                    infoDiv.appendChild(idBadge);
+                    chip.appendChild(infoDiv);
+                    
+                    if (!batchModeActive) {
+                        const qtyDiv = document.createElement('div');
+                        qtyDiv.className = 'qty-control';
+                        
+                        const minusBtn = document.createElement('button');
+                        minusBtn.className = 'qty-btn';
+                        minusBtn.textContent = '−';
+                        minusBtn.type = 'button';
+                        
+                        const qtyInput = document.createElement('input');
+                        qtyInput.type = 'number';
+                        qtyInput.className = 'qty-input';
+                        qtyInput.min = '1';
+                        qtyInput.step = '1';
+                        qtyInput.value = item.quantity;
+                        
+                        const plusBtn = document.createElement('button');
+                        plusBtn.className = 'qty-btn';
+                        plusBtn.textContent = '+';
+                        plusBtn.type = 'button';
+                        
+                        minusBtn.addEventListener('click', () => {
+                            let currentQty = parseInt(qtyInput.value, 10);
+                            if (isNaN(currentQty) || currentQty < 1) currentQty = 1;
+                            if (currentQty > 1) { currentQty--; qtyInput.value = currentQty; updateQuantity(item.id, currentQty); }
+                            else { qtyInput.value = 1; updateQuantity(item.id, 1); }
+                        });
+                        
+                        plusBtn.addEventListener('click', () => {
+                            let currentQty = parseInt(qtyInput.value, 10);
+                            if (isNaN(currentQty) || currentQty < 1) currentQty = 1;
+                            currentQty++;
+                            qtyInput.value = currentQty;
+                            updateQuantity(item.id, currentQty);
+                        });
+                        
+                        qtyInput.addEventListener('change', () => {
+                            let newQty = parseInt(qtyInput.value, 10);
+                            if (isNaN(newQty) || newQty < 1) { newQty = 1; qtyInput.value = 1; }
+                            updateQuantity(item.id, newQty);
+                        });
+                        
+                        setupQtyInputBehavior(qtyInput);
+                        
+                        qtyDiv.appendChild(minusBtn);
+                        qtyDiv.appendChild(qtyInput);
+                        qtyDiv.appendChild(plusBtn);
+                        chip.appendChild(qtyDiv);
+                    } else {
+                        const qtyLabel = document.createElement('span');
+                        qtyLabel.style.cssText = 'font-weight:600; color:#1d4a9e; background:#eef3fe; padding:5px 12px; border-radius:20px;';
+                        qtyLabel.textContent = `× ${item.quantity}`;
+                        chip.appendChild(qtyLabel);
+                    }
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'remove-chip-btn';
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.title = '移除';
+                    removeBtn.type = 'button';
+                    removeBtn.addEventListener('click', () => {
+                        selectedMap.delete(item.id);
+                        renderSelectedItems();
+                    });
+                    chip.appendChild(removeBtn);
+                    
+                    selectedList.appendChild(chip);
+                });
+
+                if (batchModeActive) renderBatchCheckboxes();
+            }
+
+            function renderBatchCheckboxes() {
+                batchCheckboxList.innerHTML = '';
+                const selectedArray = Array.from(selectedMap.values()).sort((a, b) => a.id - b.id);
+                
+                if (selectedArray.length === 0) {
+                    batchCheckboxList.innerHTML = '<div style="color:#7a8fb0; padding:8px;">暂无物品</div>';
+                    return;
+                }
+
+                selectedArray.forEach(item => {
+                    const label = document.createElement('label');
+                    label.className = 'batch-checkbox-item';
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = item.id;
+                    checkbox.checked = false;
+                    
+                    const nameText = document.createElement('span');
+                    nameText.textContent = `${item.name} (#${item.id})`;
+                    
+                    label.appendChild(checkbox);
+                    label.appendChild(nameText);
+                    
+                    batchCheckboxList.appendChild(label);
+                });
+            }
+
+            function updateQuantity(id, quantity) {
+                if (selectedMap.has(id)) selectedMap.get(id).quantity = quantity;
+            }
+
+            function toggleBatchMode() {
+                batchModeActive = !batchModeActive;
+                if (batchModeActive) {
+                    batchPanel.style.display = 'flex';
+                    renderBatchCheckboxes();
+                } else {
+                    batchPanel.style.display = 'none';
+                }
+                renderSelectedItems();
+            }
+
+            function applyBatchToAll() {
+                const qty = parseInt(batchQtyInput.value, 10);
+                if (isNaN(qty) || qty < 1) { alert('请输入有效的正整数数量！'); return; }
+                if (selectedMap.size === 0) { alert('请先添加物品！'); return; }
+                selectedMap.forEach((item) => { item.quantity = qty; });
+                renderSelectedItems();
+                // 应用到全部后关闭批量修改面板
+                if (batchModeActive) {
+                    batchModeActive = false;
+                    batchPanel.style.display = 'none';
+                    renderSelectedItems();
+                }
+            }
+
+            function applyBatchToChecked() {
+                const qty = parseInt(batchQtyInput.value, 10);
+                if (isNaN(qty) || qty < 1) { alert('请输入有效的正整数数量！'); return; }
+                const checkboxes = batchCheckboxList.querySelectorAll('input[type="checkbox"]:checked');
+                if (checkboxes.length === 0) { alert('请至少勾选一个物品'); return; }
+                checkboxes.forEach(cb => {
+                    const id = parseInt(cb.value, 10);
+                    if (selectedMap.has(id)) selectedMap.get(id).quantity = qty;
+                });
+                renderSelectedItems();
+            }
+
+            function clearAllSelected() {
+                selectedMap.clear();
+                renderSelectedItems();
+                if (batchModeActive) renderBatchCheckboxes();
+            }
+
+            function generateCodeWithIds() {
+                const selectedArray = Array.from(selectedMap.values());
+                if (selectedArray.length === 0) { alert('请先添加物品！'); return null; }
+                for (let item of selectedArray) {
+                    if (!Number.isInteger(item.quantity) || item.quantity <= 0) { alert(`物品 "${item.name}" 的数量必须是正整数！`); return null; }
+                }
+                const sorted = selectedArray.sort((a, b) => a.id - b.id);
+                let parts = [];
+                let i = 0;
+                while (i < sorted.length) {
+                    let startId = sorted[i].id;
+                    let startQty = sorted[i].quantity;
+                    let endId = startId;
+                    let j = i + 1;
+                    while (j < sorted.length && sorted[j].id === endId + 1 && sorted[j].quantity === startQty) {
+                        endId = sorted[j].id;
+                        j++;
+                    }
+                    if (startId === endId) parts.push(`${startId}.${startQty}`);
+                    else parts.push(`${startId}-${endId}.${startQty}`);
+                    i = j;
+                }
+                return 'fake' + parts.join('..');
+            }
+
+            function handleGenerateAndCopy() {
+                const code = generateCodeWithIds();
+                if (!code) return;
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(code).then(() => {
+                        alert(`🎁 兑换码已生成并复制：\n\n${code}`);
+                    }).catch(() => { alert(`🎁 兑换码已生成：\n\n${code}`); });
+                } else { alert(`🎁 兑换码已生成：\n\n${code}`); }
+            }
+
+            function clearSearch() {
+                searchInput.value = '';
+                renderResults();
+                searchInput.focus();
+            }
+
+            setupQtyInputBehavior(batchQtyInput);
+
+            searchInput.addEventListener('input', renderResults);
+            clearButton.addEventListener('click', clearSearch);
+            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Escape') clearSearch(); });
+            clearAllSelectedBtn.addEventListener('click', clearAllSelected);
+            generateCodeBtn.addEventListener('click', handleGenerateAndCopy);
+            batchModifyBtn.addEventListener('click', toggleBatchMode);
+            batchApplyAllBtn.addEventListener('click', applyBatchToAll);
+            batchApplySelectedBtn.addEventListener('click', applyBatchToChecked);
+            batchCancelBtn.addEventListener('click', () => { if (batchModeActive) toggleBatchMode(); });
+
+            renderResults();
+            renderSelectedItems();
+            batchPanel.style.display = 'none';
+        })();
+    </script>
+</body>
+</html>
